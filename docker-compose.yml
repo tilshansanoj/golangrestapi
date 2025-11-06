@@ -1,0 +1,52 @@
+
+services:
+  go-dev:
+    build: .
+    container_name: go-dev-container
+    volumes:
+      # Mount your host Go code directory to /workspace in container
+      - .:/workspace
+      # Optional: Mount Go module cache to speed up builds
+      - go-mod-cache:/go/pkg/mod
+    working_dir: /workspace
+    stdin_open: true
+    ports:
+      - "8080:8080"
+    tty: true
+    command: ["sh", "-c", "tail -f /dev/null"]  # Keep container running
+    environment:
+      - GOPATH=/go
+      - GOCACHE=/go/.cache
+    depends_on:
+      - postgres
+      - redis
+      
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: redis-cache
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PORT=6379
+    restart: unless-stopped
+    
+volumes:
+  go-mod-cache:
+  postgres_data:
+  redis_data:
