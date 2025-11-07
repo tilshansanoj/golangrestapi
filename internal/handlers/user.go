@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/tilshansanoj/golangrestapi/internal/auth"
@@ -176,7 +177,7 @@ func (h *Handler) LoginUserHandler() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) GetUserHandler() http.HandlerFunc {
+func (h *Handler) GetUserByIdHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for retrieving users
 		ctx := r.Context()
@@ -217,18 +218,18 @@ func (h *Handler) GetUserHandler() http.HandlerFunc {
 	}
 }
 
-func (h *Handler)UpdateUser() http.HandlerFunc {
+func (h *Handler)UpdateUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		ctx := r.Context()
-		claims, ok := r.Context().Value(middlewares.UserClaimKey).(*auth.Claims)
-		if !ok {
-			errorhandler.ResponseWithError(w, http.StatusUnauthorized, "Unauthorized access, Login to continue")
-			slog.Error("Unauthorized access attempt, Login to continue")
-			return
+		
+		ID := r.PathValue("id")
+		userID, _ := strconv.Atoi(ID)
+		if ID == "" {
+			errorhandler.ResponseWithError(w, http.StatusBadRequest, "Missing User ID")
+			slog.Error("Missing User ID")
 		}
 
-		userID := claims.UserID
-		var req dto.CreateUserRequest
+		var req dto.UpdateUserRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			errorhandler.ResponseWithError(w, http.StatusBadRequest, "Invalid request payload")
 			slog.Error("Invalid request payload", "error", err)
@@ -262,8 +263,54 @@ func (h *Handler)UpdateUser() http.HandlerFunc {
 			return
 		}
 
-		utils.ResponseWithSuccess(w, http.StatusCreated, "User updated successfully", req.Username)
+		utils.ResponseWithSuccess(w, http.StatusCreated, "User updated successfully", req)
 		slog.Info("User updated successfully", "username", req.Username, "email", req.Email)
 
+	}
+}
+
+func (h *Handler)DeleteUserHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request){
+		ctx := r.Context()
+
+		UserID := r.PathValue("id")
+
+		if UserID == "" {
+			utils.ResponseWithError(w, http.StatusBadRequest, "Missing User ID")
+			slog.Error("Failed to retrieve user", "error", "Missing User ID")
+			return
+		}
+
+		id, err := strconv.Atoi(UserID)
+		if err	!= nil {
+			slog.Error("Failed to parse UserID into Integer", "error", err)
+			utils.ResponseWithError(w, http.StatusBadRequest, "Faled to parse UserID into Integer")
+		}
+
+		// Start a transaction
+		tx, err := h.DB.BeginTx(ctx, nil)
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to start transaction")
+			slog.Error("Failed to start transaction", "error", err)
+			return
+		}
+		defer tx.Rollback()
+
+		_, err = h.Queries.DeleteUser(ctx, int32(id))
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to update user")
+			slog.Error("Failed to delete user", "error", err)
+			return
+		}
+		// Commit the transaction
+		if err := tx.Commit(); err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to commit transaction")
+			slog.Error("Failed to commit transaction", "error", err)
+			return
+		}
+
+		utils.ResponseWithSuccess(w, http.StatusOK, "User deleted successfully", id)
+		slog.Info("User deleted successfully", "id", id )
+		
 	}
 }

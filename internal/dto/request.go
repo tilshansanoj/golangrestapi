@@ -6,6 +6,8 @@ type CreateUserRequest struct {
 	Password string `json:"password" validate:"required" min=6,max=100"`
 }
 
+
+
 type CreateBlogRequest struct {
 	Title   string `json:"title" validate:"required" min=3,max=100"`
 	Content string `json:"content" validate:"required" min=10"`
@@ -22,5 +24,12 @@ type LoginUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Username string `json:"username" validate:"required"`
+	Username string `json:"username,omitempty"`
+	Email string `json: "email,omitempty"`
 }
+
+type UpdateBlogRequest struct {
+	Title string `json: "title,omitempty"`
+	Content string `json: "content, omitempty`
+}
+

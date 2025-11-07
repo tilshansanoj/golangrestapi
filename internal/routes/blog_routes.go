@@ -6,7 +6,8 @@ import (
 )
 
 func SetupBlogRoutes(mux *http.ServeMux, handler *handlers.Handler) {
-	mux.HandleFunc("POST /blogs/register", handler.CreateBlogHandler())
-	mux.HandleFunc("GET /blogs", handler.ListBlogsHandler())
-	mux.HandleFunc("GET /blogs/{id}", handler.GetBlogHandler())
+	mux.HandleFunc("POST /api/blog/register", handler.CreateBlogHandler())
+	mux.HandleFunc("GET /api/blog", handler.ListBlogsHandler())
+	mux.HandleFunc("GET /api/blog/{id}", handler.GetBlogHandler())
+	mux.Handle("/api/blog/", http.StripPrefix("/api/blog", mux))
 }

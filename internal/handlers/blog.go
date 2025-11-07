@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/tilshansanoj/golangrestapi/internal/dto"
+	"github.com/tilshansanoj/golangrestapi/internal/errorhandler"
 	"github.com/tilshansanoj/golangrestapi/internal/store"
 	"github.com/tilshansanoj/golangrestapi/internal/utils"
 )
@@ -93,3 +94,59 @@ func (h *Handler) GetBlogHandler() http.HandlerFunc {
 		utils.ResponseWithSuccess(w, http.StatusOK, " Blog Retrieved:", blog)
 	}
 }
+
+func (h *Handler)UpdateBlogHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request){
+		ctx := r.Context()
+
+		BlogID := r.PathValue("id")
+		if BlogID == "" {
+			utils.ResponseWithError(w, http.StatusBadRequest, "Missing Blog ID")
+			slog.Error("Failed to retrieve blog post", "error", "Missing Blog ID")
+			return
+		}
+
+		ID, _ := strconv.Atoi(BlogID)
+		if BlogID !=  "" {
+			slog.Error("Failed to parse BlogID into Integer")
+			utils.ResponseWithError(w, http.StatusBadRequest, "Faled to parse BlogID into Integer")
+		}
+		var req dto.UpdateBlogRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			errorhandler.ResponseWithError(w, http.StatusBadRequest, "Invalid request Payload")
+			slog.Error("Invalid request payload", "error", err)
+			return 
+		}
+
+		// Start a trasaction
+		tx, err := h.DB.BeginTx(ctx,nil)
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to start transaction")
+			slog.Error("Failed to start transaction", "error", err)
+			return
+		}
+		defer tx.Rollback()
+
+		_, err = h.Queries.UpdateBlog(ctx, store.UpdateBlogParams{
+			ID : int32(ID),
+			Content: req.Content,
+			Title: req.Title,
+		})
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to update user")
+			slog.Error("Failed to update blog", "error", err)
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit(); err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to commit transaction")
+			slog.Error("Failed to commit transaction", "error", err)
+			return
+		}
+		utils.ResponseWithSuccess(w, http.StatusCreated, "Blog updated successfully", req)
+		slog.Info("Blog updated successfully", "data", req)
+
+	}
+}
+ 

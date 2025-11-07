@@ -17,6 +17,16 @@ type Blog struct {
 	Updated sql.NullTime  `json:"updated"`
 }
 
+type Child struct {
+	ID       int32         `json:"id"`
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	ParentID sql.NullInt32 `json:"parent_id"`
+	Password string        `json:"password"`
+	Created  sql.NullTime  `json:"created"`
+	Updated  sql.NullTime  `json:"updated"`
+}
+
 type User struct {
 	ID       int32        `json:"id"`
 	Username string       `json:"username"`

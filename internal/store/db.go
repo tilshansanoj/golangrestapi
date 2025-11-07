@@ -27,14 +27,23 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createBlogStmt, err = db.PrepareContext(ctx, createBlog); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateBlog: %w", err)
 	}
+	if q.createChildStmt, err = db.PrepareContext(ctx, createChild); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateChild: %w", err)
+	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
-	if q.deleteUSerStmt, err = db.PrepareContext(ctx, deleteUSer); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteUSer: %w", err)
+	if q.deleteBlogStmt, err = db.PrepareContext(ctx, deleteBlog); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteBlog: %w", err)
+	}
+	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
 	}
 	if q.getBlogbyIdStmt, err = db.PrepareContext(ctx, getBlogbyId); err != nil {
 		return nil, fmt.Errorf("error preparing query GetBlogbyId: %w", err)
+	}
+	if q.getChildByIDStmt, err = db.PrepareContext(ctx, getChildByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetChildByID: %w", err)
 	}
 	if q.getUserByIDStmt, err = db.PrepareContext(ctx, getUserByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByID: %w", err)
@@ -45,8 +54,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listBlogsStmt, err = db.PrepareContext(ctx, listBlogs); err != nil {
 		return nil, fmt.Errorf("error preparing query ListBlogs: %w", err)
 	}
+	if q.listChildrenStmt, err = db.PrepareContext(ctx, listChildren); err != nil {
+		return nil, fmt.Errorf("error preparing query ListChildren: %w", err)
+	}
 	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
+	}
+	if q.updateBlogStmt, err = db.PrepareContext(ctx, updateBlog); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateBlog: %w", err)
 	}
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
@@ -61,19 +76,34 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createBlogStmt: %w", cerr)
 		}
 	}
+	if q.createChildStmt != nil {
+		if cerr := q.createChildStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createChildStmt: %w", cerr)
+		}
+	}
 	if q.createUserStmt != nil {
 		if cerr := q.createUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
 		}
 	}
-	if q.deleteUSerStmt != nil {
-		if cerr := q.deleteUSerStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteUSerStmt: %w", cerr)
+	if q.deleteBlogStmt != nil {
+		if cerr := q.deleteBlogStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteBlogStmt: %w", cerr)
+		}
+	}
+	if q.deleteUserStmt != nil {
+		if cerr := q.deleteUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
 		}
 	}
 	if q.getBlogbyIdStmt != nil {
 		if cerr := q.getBlogbyIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getBlogbyIdStmt: %w", cerr)
+		}
+	}
+	if q.getChildByIDStmt != nil {
+		if cerr := q.getChildByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getChildByIDStmt: %w", cerr)
 		}
 	}
 	if q.getUserByIDStmt != nil {
@@ -91,9 +121,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listBlogsStmt: %w", cerr)
 		}
 	}
+	if q.listChildrenStmt != nil {
+		if cerr := q.listChildrenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listChildrenStmt: %w", cerr)
+		}
+	}
 	if q.listUsersStmt != nil {
 		if cerr := q.listUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
+		}
+	}
+	if q.updateBlogStmt != nil {
+		if cerr := q.updateBlogStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateBlogStmt: %w", cerr)
 		}
 	}
 	if q.updateUserStmt != nil {
@@ -141,13 +181,18 @@ type Queries struct {
 	db                    DBTX
 	tx                    *sql.Tx
 	createBlogStmt        *sql.Stmt
+	createChildStmt       *sql.Stmt
 	createUserStmt        *sql.Stmt
-	deleteUSerStmt        *sql.Stmt
+	deleteBlogStmt        *sql.Stmt
+	deleteUserStmt        *sql.Stmt
 	getBlogbyIdStmt       *sql.Stmt
+	getChildByIDStmt      *sql.Stmt
 	getUserByIDStmt       *sql.Stmt
 	getUserByUsernameStmt *sql.Stmt
 	listBlogsStmt         *sql.Stmt
+	listChildrenStmt      *sql.Stmt
 	listUsersStmt         *sql.Stmt
+	updateBlogStmt        *sql.Stmt
 	updateUserStmt        *sql.Stmt
 }
 
@@ -156,13 +201,18 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                    tx,
 		tx:                    tx,
 		createBlogStmt:        q.createBlogStmt,
+		createChildStmt:       q.createChildStmt,
 		createUserStmt:        q.createUserStmt,
-		deleteUSerStmt:        q.deleteUSerStmt,
+		deleteBlogStmt:        q.deleteBlogStmt,
+		deleteUserStmt:        q.deleteUserStmt,
 		getBlogbyIdStmt:       q.getBlogbyIdStmt,
+		getChildByIDStmt:      q.getChildByIDStmt,
 		getUserByIDStmt:       q.getUserByIDStmt,
 		getUserByUsernameStmt: q.getUserByUsernameStmt,
 		listBlogsStmt:         q.listBlogsStmt,
+		listChildrenStmt:      q.listChildrenStmt,
 		listUsersStmt:         q.listUsersStmt,
+		updateBlogStmt:        q.updateBlogStmt,
 		updateUserStmt:        q.updateUserStmt,
 	}
 }

@@ -36,6 +36,47 @@ func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, e
 	return i, err
 }
 
+const createChild = `-- name: CreateChild :one
+INSERT INTO children (username, email, password, parent_id, created, updated)
+VALUES ($1, $2, $3, $4,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    RETURNING id, username, email, parent_id, created, updated
+`
+
+type CreateChildParams struct {
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	Password string        `json:"password"`
+	ParentID sql.NullInt32 `json:"parent_id"`
+}
+
+type CreateChildRow struct {
+	ID       int32         `json:"id"`
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	ParentID sql.NullInt32 `json:"parent_id"`
+	Created  sql.NullTime  `json:"created"`
+	Updated  sql.NullTime  `json:"updated"`
+}
+
+func (q *Queries) CreateChild(ctx context.Context, arg CreateChildParams) (CreateChildRow, error) {
+	row := q.queryRow(ctx, q.createChildStmt, createChild,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+		arg.ParentID,
+	)
+	var i CreateChildRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.ParentID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, email, password, created, updated)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -69,14 +110,34 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
-const deleteUSer = `-- name: DeleteUSer :one
+const deleteBlog = `-- name: DeleteBlog :one
+DELETE FROM blogs
+WHERE id = $1
+RETURNING id, title, content, user_id, created, updated
+`
+
+func (q *Queries) DeleteBlog(ctx context.Context, id int32) (Blog, error) {
+	row := q.queryRow(ctx, q.deleteBlogStmt, deleteBlog, id)
+	var i Blog
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
+const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
 RETURNING id, username, email, password, created, updated
 `
 
-func (q *Queries) DeleteUSer(ctx context.Context, id int32) (User, error) {
-	row := q.queryRow(ctx, q.deleteUSerStmt, deleteUSer, id)
+func (q *Queries) DeleteUser(ctx context.Context, id int32) (User, error) {
+	row := q.queryRow(ctx, q.deleteUserStmt, deleteUser, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -103,6 +164,35 @@ func (q *Queries) GetBlogbyId(ctx context.Context, id int32) (Blog, error) {
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
+const getChildByID = `-- name: GetChildByID :one
+SELECT id, username, email, parent_id, created, updated
+FROM children
+WHERE id = $1
+`
+
+type GetChildByIDRow struct {
+	ID       int32         `json:"id"`
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	ParentID sql.NullInt32 `json:"parent_id"`
+	Created  sql.NullTime  `json:"created"`
+	Updated  sql.NullTime  `json:"updated"`
+}
+
+func (q *Queries) GetChildByID(ctx context.Context, id int32) (GetChildByIDRow, error) {
+	row := q.queryRow(ctx, q.getChildByIDStmt, getChildByID, id)
+	var i GetChildByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.ParentID,
 		&i.Created,
 		&i.Updated,
 	)
@@ -192,6 +282,51 @@ func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
 	return items, nil
 }
 
+const listChildren = `-- name: ListChildren :many
+SELECT id, username, email, parent_id, created, updated
+FROM children
+ORDER BY id
+`
+
+type ListChildrenRow struct {
+	ID       int32         `json:"id"`
+	Username string        `json:"username"`
+	Email    string        `json:"email"`
+	ParentID sql.NullInt32 `json:"parent_id"`
+	Created  sql.NullTime  `json:"created"`
+	Updated  sql.NullTime  `json:"updated"`
+}
+
+func (q *Queries) ListChildren(ctx context.Context) ([]ListChildrenRow, error) {
+	rows, err := q.query(ctx, q.listChildrenStmt, listChildren)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListChildrenRow{}
+	for rows.Next() {
+		var i ListChildrenRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Email,
+			&i.ParentID,
+			&i.Created,
+			&i.Updated,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, username, email, created, updated
 FROM users
@@ -233,6 +368,34 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateBlog = `-- name: UpdateBlog :one
+UPDATE blogs
+    SET title = $2,
+    content = $3
+WHERE id = $1
+RETURNING id, title, content, user_id, created, updated
+`
+
+type UpdateBlogParams struct {
+	ID      int32  `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+func (q *Queries) UpdateBlog(ctx context.Context, arg UpdateBlogParams) (Blog, error) {
+	row := q.queryRow(ctx, q.updateBlogStmt, updateBlog, arg.ID, arg.Title, arg.Content)
+	var i Blog
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one
