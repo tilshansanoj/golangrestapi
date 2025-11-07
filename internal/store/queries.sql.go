@@ -89,6 +89,26 @@ func (q *Queries) DeleteUSer(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
+const getBlogbyId = `-- name: GetBlogbyId :one
+SELECT id, title, content, user_id, created, updated
+FROM blogs
+WHERE id = $1
+`
+
+func (q *Queries) GetBlogbyId(ctx context.Context, id int32) (Blog, error) {
+	row := q.queryRow(ctx, q.getBlogbyIdStmt, getBlogbyId, id)
+	var i Blog
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Content,
+		&i.UserID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, username, email, created, updated
 FROM users

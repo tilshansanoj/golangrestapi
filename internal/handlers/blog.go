@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/tilshansanoj/golangrestapi/internal/dto"
 	"github.com/tilshansanoj/golangrestapi/internal/store"
@@ -39,7 +40,7 @@ func (h *Handler) CreateBlogHandler() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) GetBlogsHandler() http.HandlerFunc {
+func (h *Handler) ListBlogsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for retrieving blog posts
 		ctx := r.Context()
@@ -53,5 +54,42 @@ func (h *Handler) GetBlogsHandler() http.HandlerFunc {
 
 		utils.ResponseWithSuccess(w, http.StatusOK, "Blog posts retrieved successfully", blogs)
 		slog.Info("Blog posts retrieved successfully", "blogs", blogs)
+	}
+}
+
+func (h *Handler) GetBlogHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		
+		BlogID := r.PathValue("id")
+		
+		if BlogID == "" {
+			utils.ResponseWithError(w, http.StatusBadRequest, "Missing Blog ID")
+			slog.Error("Failed to retrieve blog post", "error", "Missing Blog ID")
+			return
+		}
+
+		ID, err := strconv.Atoi(BlogID)
+		if err !=  nil {
+			slog.Error("Failed to parse BlogID into Integer", "error", err)
+			utils.ResponseWithError(w, http.StatusBadRequest, "Faled to parse BlogID into Integer")
+		}
+
+		// Call service to get blog by ID
+		blog, err := h.Queries.GetBlogbyId(ctx, int32(ID))
+		if err != nil {
+			slog.Error("Failed to get blog", "error", err)
+			utils.ResponseWithError(w, http.StatusInternalServerError, "Failed to get blog")
+			return
+		}
+
+		if blog.ID == 0 {
+			utils.ResponseWithError(w, http.StatusNotFound, "Blog not found")
+			return
+		}
+
+		slog.Info("Blog retrieved:", "blog", blog)
+		utils.ResponseWithSuccess(w, http.StatusOK, " Blog Retrieved:", blog)
 	}
 }

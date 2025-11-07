@@ -33,6 +33,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteUSerStmt, err = db.PrepareContext(ctx, deleteUSer); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUSer: %w", err)
 	}
+	if q.getBlogbyIdStmt, err = db.PrepareContext(ctx, getBlogbyId); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBlogbyId: %w", err)
+	}
 	if q.getUserByIDStmt, err = db.PrepareContext(ctx, getUserByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByID: %w", err)
 	}
@@ -66,6 +69,11 @@ func (q *Queries) Close() error {
 	if q.deleteUSerStmt != nil {
 		if cerr := q.deleteUSerStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUSerStmt: %w", cerr)
+		}
+	}
+	if q.getBlogbyIdStmt != nil {
+		if cerr := q.getBlogbyIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBlogbyIdStmt: %w", cerr)
 		}
 	}
 	if q.getUserByIDStmt != nil {
@@ -135,6 +143,7 @@ type Queries struct {
 	createBlogStmt        *sql.Stmt
 	createUserStmt        *sql.Stmt
 	deleteUSerStmt        *sql.Stmt
+	getBlogbyIdStmt       *sql.Stmt
 	getUserByIDStmt       *sql.Stmt
 	getUserByUsernameStmt *sql.Stmt
 	listBlogsStmt         *sql.Stmt
@@ -149,6 +158,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createBlogStmt:        q.createBlogStmt,
 		createUserStmt:        q.createUserStmt,
 		deleteUSerStmt:        q.deleteUSerStmt,
+		getBlogbyIdStmt:       q.getBlogbyIdStmt,
 		getUserByIDStmt:       q.getUserByIDStmt,
 		getUserByUsernameStmt: q.getUserByUsernameStmt,
 		listBlogsStmt:         q.listBlogsStmt,

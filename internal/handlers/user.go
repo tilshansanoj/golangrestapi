@@ -187,7 +187,6 @@ func (h *Handler) GetUserHandler() http.HandlerFunc {
 			slog.Error("Unauthorized access attempt, Login to continue")
 			return
 		}
-
 		
 		userID := claims.UserID
 

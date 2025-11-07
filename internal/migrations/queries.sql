@@ -39,3 +39,8 @@ RETURNING *;
 DELETE FROM users
 WHERE id = $1
 RETURNING *;
+
+-- name: GetBlogbyId :one
+SELECT id, title, content, user_id, created, updated
+FROM blogs
+WHERE id = $1;

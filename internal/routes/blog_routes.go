@@ -5,10 +5,8 @@ import (
 	"net/http"
 )
 
-func RegisterBlogRoutes(mux *http.ServeMux, handler *handlers.Handler) {
+func SetupBlogRoutes(mux *http.ServeMux, handler *handlers.Handler) {
 	mux.HandleFunc("POST /blogs/register", handler.CreateBlogHandler())
-}
-
-func GetBlogRoutes(mux *http.ServeMux, handler *handlers.Handler) {
-	mux.HandleFunc("GET /blogs", handler.GetBlogsHandler())
+	mux.HandleFunc("GET /blogs", handler.ListBlogsHandler())
+	mux.HandleFunc("GET /blogs/{id}", handler.GetBlogHandler())
 }

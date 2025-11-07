@@ -9,6 +9,5 @@ func SetupRoutes(mux *http.ServeMux, handler *handlers.Handler) {
 	// Setup health routes
 	SetupHealthRoutes(mux, handler)
 	SetupUserRoutes(mux, handler)
-	RegisterBlogRoutes(mux, handler)
-	GetBlogRoutes(mux, handler)
+	SetupBlogRoutes(mux, handler)
 }
