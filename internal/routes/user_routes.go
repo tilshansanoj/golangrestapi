@@ -8,11 +8,11 @@ import (
 )
 
 func SetupUserRoutes(mux *http.ServeMux, handler *handlers.Handler) {
-	mux.HandleFunc("POST /api/user/register", handler.CreateUserHandler())
-	mux.HandleFunc("POST /api/user/login", handler.LoginUserHandler())
-	mux.HandleFunc("GET /api/user", handler.GetAllUsersHandler())
-	mux.HandleFunc("GET /api/user/me", middlewares.AuthMiddleware(http.HandlerFunc(handler.GetUserByIdHandler())))
-	mux.HandleFunc("PATCH /api/user/{id}", handler.UpdateUserHandler())
-	mux.HandleFunc("DELETE /api/user/{id}", handler.DeleteUserHandler())
-	mux.Handle("/api/user/", http.StripPrefix("/api/user", mux))
+	mux.HandleFunc("POST /api/users/register", handler.CreateUserHandler())
+	mux.HandleFunc("POST /api/users/login", handler.LoginUserHandler())
+	mux.HandleFunc("GET /api/users", handler.GetAllUsersHandler())
+	mux.HandleFunc("GET /api/users/me", middlewares.AuthMiddleware(http.HandlerFunc(handler.GetUserByIdHandler())))
+	mux.HandleFunc("PATCH /api/users/{id}", handler.UpdateUserHandler())
+	mux.HandleFunc("DELETE /api/users/{id}", handler.DeleteUserHandler())
+	mux.Handle("/api/users/", http.StripPrefix("/api/users", mux))
 }

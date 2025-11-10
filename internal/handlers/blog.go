@@ -107,7 +107,7 @@ func (h *Handler)UpdateBlogHandler() http.HandlerFunc {
 		}
 
 		ID, _ := strconv.Atoi(BlogID)
-		if BlogID !=  "" {
+		if BlogID ==  "" {
 			slog.Error("Failed to parse BlogID into Integer")
 			utils.ResponseWithError(w, http.StatusBadRequest, "Faled to parse BlogID into Integer")
 		}
@@ -147,6 +147,46 @@ func (h *Handler)UpdateBlogHandler() http.HandlerFunc {
 		utils.ResponseWithSuccess(w, http.StatusCreated, "Blog updated successfully", req)
 		slog.Info("Blog updated successfully", "data", req)
 
+	}
+}
+
+func (h *Handler)DeleteBlogHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		
+		BlogID := r.PathValue("id")
+
+		ID, err := strconv.Atoi(BlogID)
+		if BlogID ==  "" {
+			slog.Error("Failed to parse BlogID into Integer", "error", err)
+			utils.ResponseWithError(w, http.StatusBadRequest, "Faled to parse BlogID into Integer")
+		}
+		
+		// Start a trasaction
+		tx, err := h.DB.BeginTx(ctx,nil)
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to start transaction")
+			slog.Error("Failed to start transaction", "error", err)
+			return
+		}
+		defer tx.Rollback()
+
+		_, err = h.Queries.DeleteBlog(ctx, int32(ID))
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to update user")
+			slog.Error("Failed to delete user", "error", err)
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit(); err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to commit transaction")
+			slog.Error("Failed to commit transaction", "error", err)
+			return
+		}
+
+		utils.ResponseWithSuccess(w, http.StatusOK, "Blog deleted successfully", ID)
+		slog.Info("Blog deleted successfully", "id", ID )
 	}
 }
  
