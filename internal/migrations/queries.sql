@@ -71,3 +71,15 @@ WHERE id = $1;
 SELECT id, username, email, parent_id, created, updated
 FROM children
 ORDER BY id;
+
+-- name: UpdateChild :one
+UPDATE children
+    SET username = $2,
+    email = $3
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteChild :one
+DELETE FROM children
+WHERE id = $1
+RETURNING *;

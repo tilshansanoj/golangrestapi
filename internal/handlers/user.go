@@ -18,6 +18,18 @@ import (
 	"github.com/tilshansanoj/golangrestapi/internal/validation"
 )
 
+// CreateUser godoc
+// @Summary Create an user
+// @Description Create a new user by providing username, email and password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body dto.CreateUserRequest true "Create User Request"
+// @Success 201 {string} string
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Failure 409 {object} errorhandler.ErrorResponse 
+// @Failure 500 {object} errorhandler.ErrorResponse
+// @Router /users/register [post]
 func (h *Handler) CreateUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Implementation for creating a user
@@ -114,6 +126,15 @@ func (h *Handler) GetUserProfileHandler() http.HandlerFunc {
 	}
 }
 
+// GetUsers godoc
+// @Summary Get users
+// @Description Get all users
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.User
+// @Failure 404 {object} errorhandler.ErrorResponse
+// @Router /users [get]
 func (h *Handler) GetAllUsersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Implementation for retrieving all users
@@ -131,6 +152,16 @@ func (h *Handler) GetAllUsersHandler() http.HandlerFunc {
 	}
 }
 
+// GetUserToken godoc
+// @Summary Get user token
+// @Description Get user token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body dto.LoginUserRequest true "Login User Request"
+// @Success 200 {string} utils.ResponseWithSuccess
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Router /users/login [post]
 func (h *Handler) LoginUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Implementation for user login
@@ -177,6 +208,16 @@ func (h *Handler) LoginUserHandler() http.HandlerFunc {
 	}
 }
 
+// GetUserProfile godoc
+// @Summary Get user by JWT token
+// @Description Get user by providing JWT token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer {token}"
+// @Success 200 {object} models.User
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Router /users/me [get]
 func (h *Handler) GetUserByIdHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for retrieving users
@@ -218,6 +259,18 @@ func (h *Handler) GetUserByIdHandler() http.HandlerFunc {
 	}
 }
 
+// UpdateUser godoc
+// @Summary Update an user
+// @Description Update an existing user by providing username and email
+// @Tags users
+// @Param id path int true "User ID"
+// @Accept json
+// @Produce json
+// @Param user body dto.UpdateUserRequest true "Update User Request"
+// @Success 201 {object} models.User
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Failure 500 {object} errorhandler.ErrorResponse
+// @Router /users/{id} [patch]
 func (h *Handler)UpdateUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		ctx := r.Context()
@@ -269,6 +322,17 @@ func (h *Handler)UpdateUserHandler() http.HandlerFunc {
 	}
 }
 
+// DeleteUser godoc
+// @Summary Delete an user
+// @Description Delete an existing user by providing user ID
+// @Tags users
+// @Param id path int true "User ID"
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Failure 500 {object} errorhandler.ErrorResponse
+// @Router /users/{id} [delete]
 func (h *Handler)DeleteUserHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		ctx := r.Context()

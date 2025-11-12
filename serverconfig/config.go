@@ -8,6 +8,7 @@ import (
 )
 
 type serverConfig struct {
+	ApiUrl string
 	ServerPort string
 	DatabaseURL string
 	Environment string
@@ -24,6 +25,7 @@ func GetConfig() (*serverConfig, error) {
 	}
 
 	return &serverConfig{
+		ApiUrl:      getEnv("API_URL", "http://localhost:8080"),
 		ServerPort:  getEnv("SERVER_PORT", "8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://user:password@localhost:5432/dbname"),
 		Environment: getEnv("ENVIRONMENT", "development"),

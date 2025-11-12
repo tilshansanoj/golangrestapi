@@ -130,6 +130,27 @@ func (q *Queries) DeleteBlog(ctx context.Context, id int32) (Blog, error) {
 	return i, err
 }
 
+const deleteChild = `-- name: DeleteChild :one
+DELETE FROM children
+WHERE id = $1
+RETURNING id, username, email, parent_id, password, created, updated
+`
+
+func (q *Queries) DeleteChild(ctx context.Context, id int32) (Child, error) {
+	row := q.queryRow(ctx, q.deleteChildStmt, deleteChild, id)
+	var i Child
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.ParentID,
+		&i.Password,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
@@ -392,6 +413,35 @@ func (q *Queries) UpdateBlog(ctx context.Context, arg UpdateBlogParams) (Blog, e
 		&i.Title,
 		&i.Content,
 		&i.UserID,
+		&i.Created,
+		&i.Updated,
+	)
+	return i, err
+}
+
+const updateChild = `-- name: UpdateChild :one
+UPDATE children
+    SET username = $2,
+    email = $3
+WHERE id = $1
+RETURNING id, username, email, parent_id, password, created, updated
+`
+
+type UpdateChildParams struct {
+	ID       int32  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+func (q *Queries) UpdateChild(ctx context.Context, arg UpdateChildParams) (Child, error) {
+	row := q.queryRow(ctx, q.updateChildStmt, updateChild, arg.ID, arg.Username, arg.Email)
+	var i Child
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.ParentID,
+		&i.Password,
 		&i.Created,
 		&i.Updated,
 	)

@@ -36,6 +36,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteBlogStmt, err = db.PrepareContext(ctx, deleteBlog); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteBlog: %w", err)
 	}
+	if q.deleteChildStmt, err = db.PrepareContext(ctx, deleteChild); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteChild: %w", err)
+	}
 	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
 	}
@@ -63,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateBlogStmt, err = db.PrepareContext(ctx, updateBlog); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBlog: %w", err)
 	}
+	if q.updateChildStmt, err = db.PrepareContext(ctx, updateChild); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateChild: %w", err)
+	}
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
@@ -89,6 +95,11 @@ func (q *Queries) Close() error {
 	if q.deleteBlogStmt != nil {
 		if cerr := q.deleteBlogStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteBlogStmt: %w", cerr)
+		}
+	}
+	if q.deleteChildStmt != nil {
+		if cerr := q.deleteChildStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteChildStmt: %w", cerr)
 		}
 	}
 	if q.deleteUserStmt != nil {
@@ -134,6 +145,11 @@ func (q *Queries) Close() error {
 	if q.updateBlogStmt != nil {
 		if cerr := q.updateBlogStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateBlogStmt: %w", cerr)
+		}
+	}
+	if q.updateChildStmt != nil {
+		if cerr := q.updateChildStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateChildStmt: %w", cerr)
 		}
 	}
 	if q.updateUserStmt != nil {
@@ -184,6 +200,7 @@ type Queries struct {
 	createChildStmt       *sql.Stmt
 	createUserStmt        *sql.Stmt
 	deleteBlogStmt        *sql.Stmt
+	deleteChildStmt       *sql.Stmt
 	deleteUserStmt        *sql.Stmt
 	getBlogbyIdStmt       *sql.Stmt
 	getChildByIDStmt      *sql.Stmt
@@ -193,6 +210,7 @@ type Queries struct {
 	listChildrenStmt      *sql.Stmt
 	listUsersStmt         *sql.Stmt
 	updateBlogStmt        *sql.Stmt
+	updateChildStmt       *sql.Stmt
 	updateUserStmt        *sql.Stmt
 }
 
@@ -204,6 +222,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createChildStmt:       q.createChildStmt,
 		createUserStmt:        q.createUserStmt,
 		deleteBlogStmt:        q.deleteBlogStmt,
+		deleteChildStmt:       q.deleteChildStmt,
 		deleteUserStmt:        q.deleteUserStmt,
 		getBlogbyIdStmt:       q.getBlogbyIdStmt,
 		getChildByIDStmt:      q.getChildByIDStmt,
@@ -213,6 +232,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listChildrenStmt:      q.listChildrenStmt,
 		listUsersStmt:         q.listUsersStmt,
 		updateBlogStmt:        q.updateBlogStmt,
+		updateChildStmt:       q.updateChildStmt,
 		updateUserStmt:        q.updateUserStmt,
 	}
 }

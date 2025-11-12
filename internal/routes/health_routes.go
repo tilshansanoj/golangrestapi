@@ -6,5 +6,5 @@ import (
 )
 
 func SetupHealthRoutes(mux *http.ServeMux, handler *handlers.Handler) {
-	mux.HandleFunc("/health", handler.HealthCheckHandler())
+	mux.HandleFunc("/api/health", handler.HealthCheckHandler())
 }

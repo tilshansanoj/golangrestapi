@@ -13,8 +13,24 @@ import (
 	"github.com/tilshansanoj/golangrestapi/internal/routes"
 	"github.com/tilshansanoj/golangrestapi/internal/store"
 	"github.com/tilshansanoj/golangrestapi/serverconfig"
+	_"github.com/tilshansanoj/golangrestapi/docs"
+	"github.com/swaggo/http-swagger/v2"
 )
 
+// @title Golang REST API
+// @version 1.0
+// @description This is a sample API created by Golang.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api
 func main()  {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
@@ -40,9 +56,11 @@ func main()  {
 	handler := handlers.NewHandler(db, queries, rdb)
 	//set up http server
 	mux := http.NewServeMux()
-
+	//setup swagger
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 	//setup routes
 	routes.SetupRoutes(mux, handler)
+
 
 	//server instance
 	serverAddress := fmt.Sprintf(":%s", config.ServerPort)

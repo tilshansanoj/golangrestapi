@@ -12,7 +12,6 @@ type SuccessResponse struct {
 
 type ErrorResponse struct {
 	Message string `json:"message"`
-	
 }
 
 func ResponseWithSuccess(w http.ResponseWriter, code int, message string, data any) {
