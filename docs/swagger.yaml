@@ -38,19 +38,16 @@ definitions:
   handlers.HealthCheckResponse:
     properties:
       errors:
-        $ref: '#/definitions/handlers.Services'
+        additionalProperties:
+          type: string
+        type: object
       services:
-        $ref: '#/definitions/handlers.Services'
+        additionalProperties:
+          type: string
+        type: object
       status:
         type: string
       timestamp:
-        type: string
-    type: object
-  handlers.Services:
-    properties:
-      database:
-        type: string
-      redis:
         type: string
     type: object
   models.User:
@@ -211,31 +208,6 @@ paths:
       summary: Get user token
       tags:
       - users
-  /users/me:
-    get:
-      consumes:
-      - application/json
-      description: Get user by providing JWT token
-      parameters:
-      - description: Bearer {token}
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errorhandler.ErrorResponse'
-      summary: Get user by JWT token
-      tags:
-      - users
   /users/register:
     post:
       consumes:
@@ -268,6 +240,60 @@ paths:
           schema:
             $ref: '#/definitions/errorhandler.ErrorResponse'
       summary: Create an user
+      tags:
+      - users
+  /users/session:
+    get:
+      consumes:
+      - application/json
+      description: Get user by providing JWT token
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errorhandler.ErrorResponse'
+      summary: Get user by JWT token
+      tags:
+      - users
+  /users/session/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user by blacklisting the JWT token
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errorhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errorhandler.ErrorResponse'
+      summary: Logout user
       tags:
       - users
 swagger: "2.0"

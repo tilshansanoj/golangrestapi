@@ -125,44 +125,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/me": {
-            "get": {
-                "description": "Get user by providing JWT token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get user by JWT token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer {token}",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errorhandler.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/users/register": {
             "post": {
                 "description": "Create a new user by providing username, email and password",
@@ -202,6 +164,88 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/errorhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errorhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/session": {
+            "get": {
+                "description": "Get user by providing JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user by JWT token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errorhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/session/logout": {
+            "post": {
+                "description": "Logout user by blacklisting the JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Logout user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/errorhandler.ErrorResponse"
                         }
@@ -369,26 +413,21 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "errors": {
-                    "$ref": "#/definitions/handlers.Services"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "services": {
-                    "$ref": "#/definitions/handlers.Services"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "status": {
                     "type": "string"
                 },
                 "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.Services": {
-            "type": "object",
-            "properties": {
-                "database": {
-                    "type": "string"
-                },
-                "redis": {
                     "type": "string"
                 }
             }

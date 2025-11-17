@@ -219,7 +219,7 @@ func (h *Handler) LoginUserHandler() http.HandlerFunc {
 // @Param Authorization header string true "Bearer {token}"
 // @Success 200 {object} models.User
 // @Failure 400 {object} errorhandler.ErrorResponse
-// @Router /users/me [get]
+// @Router /users/session [get]
 func (h *Handler) GetUserByIdHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for retrieving users
@@ -381,6 +381,18 @@ func (h *Handler)DeleteUserHandler() http.HandlerFunc {
 	}
 }
 
+
+// logoutUserHandler godoc
+// @Summary Logout user
+// @Description Logout user by blacklisting the JWT token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer {token}"
+// @Success 200 {string} string
+// @Failure 400 {object} errorhandler.ErrorResponse
+// @Failure 500 {object} errorhandler.ErrorResponse
+// @Router /users/session/logout [post]
 // logout user handler
 func (h *Handler) LogoutUserHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
