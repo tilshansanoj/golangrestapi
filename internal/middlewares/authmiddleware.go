@@ -2,11 +2,14 @@ package middlewares
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/redis/go-redis/v9"
+	"github.com/tilshansanoj/golangrestapi/dbconfig"
 	"github.com/tilshansanoj/golangrestapi/internal/auth"
 	"github.com/tilshansanoj/golangrestapi/internal/errorhandler"
 )
@@ -28,6 +31,18 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Bearer token parsing
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims := &auth.Claims{}
+
+		// Check redis for blacklisted token
+		isBlacklisted, err := dbconfig.RedisClient.Get(context.Background(), tokenString).Result()
+		if err == nil && isBlacklisted == "blacklisted" {
+			errorhandler.ResponseWithError(w, http.StatusUnauthorized, "Token has been revoked")
+			slog.Warn("Blacklisted token access attempt", "token", tokenString)
+			return
+		} else if err != nil && err != redis.Nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Internal server error")
+			slog.Error("Redis error while checking blacklisted token", "error", err)
+			return
+		}
 
 		// parse the token
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

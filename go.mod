@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/go-chi/chi v1.5.5
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
@@ -12,6 +11,7 @@ require (
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.43.0
+	honnef.co/go/tools v0.6.1
 )
 
 require (

@@ -40,3 +40,4 @@ func ParseJWT(tokenStr string, secretKey []byte) (*Claims, error) {
 	}
 	return nil, err
 }
+

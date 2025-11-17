@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/tilshansanoj/golangrestapi/internal/auth"
@@ -27,7 +29,7 @@ import (
 // @Param user body dto.CreateUserRequest true "Create User Request"
 // @Success 201 {string} string
 // @Failure 400 {object} errorhandler.ErrorResponse
-// @Failure 409 {object} errorhandler.ErrorResponse 
+// @Failure 409 {object} errorhandler.ErrorResponse
 // @Failure 500 {object} errorhandler.ErrorResponse
 // @Router /users/register [post]
 func (h *Handler) CreateUserHandler() http.HandlerFunc {
@@ -377,4 +379,81 @@ func (h *Handler)DeleteUserHandler() http.HandlerFunc {
 		slog.Info("User deleted successfully", "id", id )
 		
 	}
+}
+
+// logout user handler
+func (h *Handler) LogoutUserHandler() http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request){
+		// extract the jwt claims from the context
+		ctx := r.Context()
+
+		claims, ok := r.Context().Value(middlewares.UserClaimKey).(*auth.Claims)
+		if !ok {
+			errorhandler.ResponseWithError(w, http.StatusUnauthorized, "Unauthorized access, Login to continue")
+			slog.Error("Unauthorized access attempt, Login to continue")
+			return
+		}
+
+		// extract the token from the authorization header
+		tokenString := extractTokenFromHeader(r)
+		if tokenString == "" {
+			errorhandler.ResponseWithError(w, http.StatusBadRequest, "Missing token in Authorization header")
+			slog.Error("Missing token in Authorization header")
+			return
+		}
+
+		// conver the expiration time.Time
+		expirationTime := time.Unix(claims.ExpiresAt, 0)
+		now := time.Now()
+		ttl := expirationTime.Sub(now)
+
+		if ttl <= 0 {
+			ttl = time.Minute * 5 // fallback ttl
+		}
+
+		//blacklist the token in redis
+		err := h.Redis.Set(ctx, tokenString, "blacklisted", ttl).Err()
+		if err != nil {
+			errorhandler.ResponseWithError(w, http.StatusInternalServerError, "Failed to logout user")
+			slog.Error("Failed to blacklist token in redis", "error", err)
+			return
+		}
+
+		//clear any cached user data in redis
+		userIDstr := fmt.Sprintf("user: %d", claims.UserID)
+		if err := h.clearUserSession(userIDstr); err != nil {
+			slog.Error("Failed to clear user session from redis", "error", err)
+		}
+		utils.ResponseWithSuccess(w, http.StatusOK, "User logged out successfully", nil)
+	}
+}
+
+func extractTokenFromHeader(r *http.Request) string {
+	authHeader := r.Header.Get("Authorization")	
+	if authHeader == "" {
+		return ""
+	}
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return ""
+	}
+	return parts[1]
+}
+
+func (h *Handler) clearUserSession(userID string) error {
+	pattern := fmt.Sprintf("session:%s:*", userID)
+
+	// Background context for Redis operations
+	ctx := context.Background()
+
+	// Use Redis SCAN to find keys matching the pattern
+	iter := h.Redis.Scan(ctx, 0, pattern, 0).Iterator()
+
+	// Delete each matching key
+	for iter.Next(ctx) {
+		if err := h.Redis.Del(ctx, iter.Val()).Err(); err != nil {
+			slog.Error("Failed to delete user session from redis", "error", err)
+		}
+	}
+	return iter.Err()
 }
