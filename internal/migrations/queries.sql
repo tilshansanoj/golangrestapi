@@ -83,3 +83,30 @@ RETURNING *;
 DELETE FROM children
 WHERE id = $1
 RETURNING *;
+
+-- name: CreateUserProfile :one
+INSERT INTO user_profiles (user_id, bio, profile_picture_url)
+VALUES ($1, $2, $3)
+    RETURNING id, user_id, bio, profile_picture_url, created, updated;
+
+-- name: GetUserProfileByUserID :one
+SELECT id, user_id, bio, profile_picture_url, created, updated
+FROM user_profiles
+WHERE user_id = $1;
+
+-- name: UpdateUserProfile :one
+UPDATE user_profiles
+    SET bio = $2,
+    profile_picture_url = $3
+WHERE user_id = $1
+RETURNING *;
+
+-- name: DeleteUserProfile :one
+DELETE FROM user_profiles
+WHERE user_id = $1
+RETURNING *;
+
+--- name: ListUserProfiles :many
+SELECT id, user_id, bio, profile_picture_url, created, updated
+FROM user_profiles
+ORDER BY id;

@@ -8,13 +8,13 @@ import (
 	"os"
 
 	"github.com/redis/go-redis/v9"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/tilshansanoj/golangrestapi/dbconfig"
+	_ "github.com/tilshansanoj/golangrestapi/docs"
 	"github.com/tilshansanoj/golangrestapi/internal/handlers"
 	"github.com/tilshansanoj/golangrestapi/internal/routes"
 	"github.com/tilshansanoj/golangrestapi/internal/store"
 	"github.com/tilshansanoj/golangrestapi/serverconfig"
-	_"github.com/tilshansanoj/golangrestapi/docs"
-	"github.com/swaggo/http-swagger/v2"
 )
 
 // @title Golang REST API
@@ -31,14 +31,17 @@ import (
 
 // @host localhost:8080
 // @BasePath /api
-func main()  {
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 	// slog.Info("App is running...")
 
 	//load server config
 	config, err := serverconfig.GetConfig()
-	if  err != nil {
+	if err != nil {
 		log.Fatalf("Failed to load server config: %v\n", err)
 	}
 
@@ -48,7 +51,7 @@ func main()  {
 
 	// Connect to Redis
 	rdb := dbconfig.ConnectRedis()
-	defer func (rdb *redis.Client) {
+	defer func(rdb *redis.Client) {
 		_ = rdb.Close()
 	}(rdb)
 
@@ -60,7 +63,6 @@ func main()  {
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 	//setup routes
 	routes.SetupRoutes(mux, handler)
-
 
 	//server instance
 	serverAddress := fmt.Sprintf(":%s", config.ServerPort)
@@ -75,5 +77,4 @@ func main()  {
 		log.Fatalf("Server failed to start: %v\n", err)
 	}
 
-	
 }

@@ -13,6 +13,17 @@ import (
 	"github.com/tilshansanoj/golangrestapi/internal/utils"
 )
 
+// CreateBlogHandler godoc
+// @Summary Create a new blog post
+// @Description Creates a new blog post with title, content, and user ID
+// @Tags Blogs
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateBlogRequest true "Create Blog Request"
+// @Success 201 {object} utils.SuccessResponse "Blog post created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request payload"
+// @Failure 500 {object} utils.ErrorResponse "Failed to create blog post"
+// @Router /blogs [post]
 func (h *Handler) CreateBlogHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for creating a blog post
@@ -41,6 +52,14 @@ func (h *Handler) CreateBlogHandler() http.HandlerFunc {
 	}
 }
 
+// ListBlogsHandler godoc
+// @Summary List all blog posts
+// @Description Retrieves all blog posts
+// @Tags Blogs
+// @Produce json
+// @Success 200 {array} utils.SuccessResponse "List of blogs"
+// @Failure 500 {object} utils.ErrorResponse "Failed to retrieve blog posts"
+// @Router /blogs [get]
 func (h *Handler) ListBlogsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Handler logic for retrieving blog posts
@@ -58,6 +77,17 @@ func (h *Handler) ListBlogsHandler() http.HandlerFunc {
 	}
 }
 
+// GetBlogHandler godoc
+// @Summary Get a blog post by ID
+// @Description Retrieves a blog post by its ID
+// @Tags Blogs
+// @Produce json
+// @Param id path int true "Blog ID"
+// @Success 200 {object} utils.SuccessResponse "Blog retrieved"
+// @Failure 400 {object} utils.ErrorResponse "Invalid Blog ID"
+// @Failure 404 {object} utils.ErrorResponse "Blog not found"
+// @Failure 500 {object} utils.ErrorResponse "Failed to retrieve blog"
+// @Router /blogs/{id} [get]
 func (h *Handler) GetBlogHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -95,6 +125,18 @@ func (h *Handler) GetBlogHandler() http.HandlerFunc {
 	}
 }
 
+// UpdateBlogHandler godoc
+// @Summary Update a blog post
+// @Description Updates a blog post by ID
+// @Tags Blogs
+// @Accept json
+// @Produce json
+// @Param id path int true "Blog ID"
+// @Param request body dto.UpdateBlogRequest true "Update Blog Request"
+// @Success 200 {object} utils.SuccessResponse "Blog updated successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid Blog ID or payload"
+// @Failure 500 {object} utils.ErrorResponse "Failed to update blog"
+// @Router /blogs/{id} [put]
 func (h *Handler)UpdateBlogHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request){
 		ctx := r.Context()
@@ -150,6 +192,16 @@ func (h *Handler)UpdateBlogHandler() http.HandlerFunc {
 	}
 }
 
+// DeleteBlogHandler godoc
+// @Summary Delete a blog post
+// @Description Deletes a blog post by ID
+// @Tags Blogs
+// @Produce json
+// @Param id path int true "Blog ID"
+// @Success 200 {object} utils.SuccessResponse "Blog deleted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid Blog ID"
+// @Failure 500 {object} utils.ErrorResponse "Failed to delete blog"
+// @Router /blogs/{id} [delete]
 func (h *Handler)DeleteBlogHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

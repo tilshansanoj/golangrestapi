@@ -1,5 +1,17 @@
 basePath: /api
 definitions:
+  dto.CreateBlogRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - content
+    - title
+    type: object
   dto.CreateUserRequest:
     properties:
       email:
@@ -22,6 +34,13 @@ definitions:
     required:
     - password
     - username
+    type: object
+  dto.UpdateBlogRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
     type: object
   dto.UpdateUserRequest:
     properties:
@@ -65,6 +84,17 @@ definitions:
       username:
         type: string
     type: object
+  utils.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  utils.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -79,6 +109,145 @@ info:
   title: Golang REST API
   version: "1.0"
 paths:
+  /blogs:
+    get:
+      description: Retrieves all blog posts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of blogs
+          schema:
+            items:
+              $ref: '#/definitions/utils.SuccessResponse'
+            type: array
+        "500":
+          description: Failed to retrieve blog posts
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: List all blog posts
+      tags:
+      - Blogs
+    post:
+      consumes:
+      - application/json
+      description: Creates a new blog post with title, content, and user ID
+      parameters:
+      - description: Create Blog Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBlogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Blog post created successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create blog post
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Create a new blog post
+      tags:
+      - Blogs
+  /blogs/{id}:
+    delete:
+      description: Deletes a blog post by ID
+      parameters:
+      - description: Blog ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Blog deleted successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid Blog ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to delete blog
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Delete a blog post
+      tags:
+      - Blogs
+    get:
+      description: Retrieves a blog post by its ID
+      parameters:
+      - description: Blog ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Blog retrieved
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid Blog ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Blog not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve blog
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get a blog post by ID
+      tags:
+      - Blogs
+    put:
+      consumes:
+      - application/json
+      description: Updates a blog post by ID
+      parameters:
+      - description: Blog ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Blog Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBlogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Blog updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid Blog ID or payload
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update blog
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update a blog post
+      tags:
+      - Blogs
   /health:
     get:
       consumes:
@@ -296,4 +465,9 @@ paths:
       summary: Logout user
       tags:
       - users
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
